@@ -433,19 +433,19 @@ export default function Dashboard() {
                         <p>Select a method to find new leads</p>
                     </div>
                     <div className="home-grid">
-                        <div className="home-card">
+                        <div className="home-card" onClick={() => setActiveTab('search')}>
                             <div className="home-card-icon">🤖</div>
                             <h3>Search Agents</h3>
                             <p>Find RV repair shops, mobile techs, and dealerships using Google Maps.</p>
-                            <button onClick={() => setActiveTab('search')} className="home-card-btn">
+                            <button className="home-card-btn">
                                 Go to Search Agents →
                             </button>
                         </div>
-                        <div className="home-card">
+                        <div className="home-card" onClick={() => setActiveTab('rvowners')}>
                             <div className="home-card-icon">🚐</div>
                             <h3>RV Owners</h3>
                             <p>Find private RV sellers from Craigslist, RVTrader, and Data Axle.</p>
-                            <button onClick={() => setActiveTab('rvowners')} className="home-card-btn">
+                            <button className="home-card-btn">
                                 Go to RV Owners →
                             </button>
                         </div>
@@ -508,71 +508,93 @@ export default function Dashboard() {
                         <h2>🚐 RV Owner Search</h2>
                         <p>Find RV owners from classified listings (RVTrader, Craigslist, etc.)</p>
 
-                        <form onSubmit={handleRVOwnerSearch} className="search-form rv-form">
-                            <select
-                                value={rvSource}
-                                onChange={(e) => setRvSource(e.target.value)}
-                                className="search-input source-select"
-                            >
-                                <option value="rvtrader">RVTrader</option>
-                                <option value="craigslist">Craigslist (Free)</option>
-                                <option value="dataaxle">Data Axle (Premium)</option>
-                            </select>
-                            <input
-                                type="text"
-                                value={rvState}
-                                onChange={(e) => setRvState(e.target.value)}
-                                placeholder="State (e.g., TX, CA, FL)"
-                                className="search-input state-input"
-                                required
-                            />
-                            <input
-                                type="text"
-                                value={rvCity}
-                                onChange={(e) => setRvCity(e.target.value)}
-                                placeholder="City (optional)"
-                                className="search-input city-input"
-                            />
+                        <form onSubmit={handleRVOwnerSearch} className="search-form rv-form-grid">
+                            <div className="form-group">
+                                <label>Source</label>
+                                <select
+                                    value={rvSource}
+                                    onChange={(e) => setRvSource(e.target.value)}
+                                    className="search-input source-select"
+                                >
+                                    <option value="rvtrader">RVTrader</option>
+                                    <option value="craigslist">Craigslist (Free)</option>
+                                    <option value="dataaxle">Data Axle (Premium)</option>
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>State (Required)</label>
+                                <input
+                                    type="text"
+                                    value={rvState}
+                                    onChange={(e) => setRvState(e.target.value)}
+                                    placeholder="e.g. TX"
+                                    className="search-input state-input"
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>City</label>
+                                <input
+                                    type="text"
+                                    value={rvCity}
+                                    onChange={(e) => setRvCity(e.target.value)}
+                                    placeholder="e.g. Austin"
+                                    className="search-input city-input"
+                                />
+                            </div>
+
                             {rvSource === 'rvtrader' && (
-                                <input
-                                    type="text"
-                                    value={rvType}
-                                    onChange={(e) => setRvType(e.target.value)}
-                                    placeholder="RV Type (optional)"
-                                    className="search-input type-input"
-                                />
+                                <div className="form-group">
+                                    <label>RV Type</label>
+                                    <input
+                                        type="text"
+                                        value={rvType}
+                                        onChange={(e) => setRvType(e.target.value)}
+                                        placeholder="e.g. Class A"
+                                        className="search-input type-input"
+                                    />
+                                </div>
                             )}
+
                             {rvSource === 'dataaxle' && (
-                                <input
-                                    type="text"
-                                    value={rvZip}
-                                    onChange={(e) => setRvZip(e.target.value)}
-                                    placeholder="ZIP Code (optional)"
-                                    className="search-input zip-input"
-                                />
+                                <div className="form-group">
+                                    <label>ZIP Code</label>
+                                    <input
+                                        type="text"
+                                        value={rvZip}
+                                        onChange={(e) => setRvZip(e.target.value)}
+                                        placeholder="e.g. 78701"
+                                        className="search-input zip-input"
+                                    />
+                                </div>
                             )}
-                            <input
-                                type="number"
-                                value={maxResults}
-                                onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)}
-                                placeholder="Max"
-                                className="search-limit"
-                                min="1"
-                                max="200"
-                            />
-                            <button type="submit" disabled={scraping} className="search-btn">
-                                {scraping ? 'Searching...' : 'Find RV Owners'}
-                            </button>
+
+                            <div className="form-group">
+                                <label>Max Results</label>
+                                <input
+                                    type="number"
+                                    value={maxResults}
+                                    onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)}
+                                    placeholder="50"
+                                    className="search-limit"
+                                    min="1"
+                                    max="200"
+                                />
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="submit" disabled={scraping} className="search-btn full-width">
+                                    {scraping ? 'Searching...' : 'Find RV Owners'}
+                                </button>
+                            </div>
                         </form>
 
-                        <div className="search-tips">
-                            <h3>Tips:</h3>
-                            <ul>
-                                <li><strong>State</strong> is required (2-letter code)</li>
-                                <li><strong>City</strong> narrows results to a specific area</li>
-                                <li><strong>RV Type</strong>: Class A, Class B, Travel Trailer, Fifth Wheel, etc.</li>
-                                <li>Scrapes <strong>private sellers only</strong> (not dealers)</li>
-                            </ul>
+                        <div className="search-tips compact">
+                            <small>
+                                <strong>Tips:</strong> State is required. City narrows results. Scrapes private sellers only.
+                            </small>
                         </div>
                     </div>
 

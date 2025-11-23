@@ -744,3 +744,50 @@
 .home-card-btn:hover {
     background: var(--accent-hover);
 }
+
+/* Clickable Home Card */
+.home-card {
+    cursor: pointer;
+}
+
+/* RV Form Grid Layout */
+.rv-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.search-tips.compact {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.search-tips.compact small {
+    font-size: 0.9rem;
+}
