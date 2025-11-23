@@ -6,7 +6,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://unsuperseded-melani-non
 const api = axios.create({
     baseURL: API_URL,
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
     }
 });
 
