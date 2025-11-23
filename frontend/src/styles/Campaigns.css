@@ -1,0 +1,137 @@
+/* frontend/src/styles/Campaigns.css */
+.campaigns {
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+.create-btn {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+}
+
+.campaign-form-container {
+    padding: 30px 40px;
+}
+
+.campaign-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.campaign-form h2 {
+    margin-bottom: 24px;
+    color: var(--dark);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.campaign-form .form-group {
+    margin-bottom: 20px;
+}
+
+.campaign-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+}
+
+.campaign-form input,
+.campaign-form select,
+.campaign-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.campaign-form input:focus,
+.campaign-form select:focus,
+.campaign-form textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.campaign-form textarea {
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.submit-btn {
+    background: var(--primary);
+    color: white;
+    padding: 12px 30px;
+    font-size: 1rem;
+}
+
+.campaigns-list {
+    padding: 0 40px 40px;
+}
+
+.campaigns-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.campaigns-table thead {
+    background: var(--light);
+}
+
+.campaigns-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+}
+
+.campaigns-table td {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.campaigns-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.send-btn {
+    background: var(--success);
+    color: white;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    margin-right: 8px;
+}
+
+.status-draft {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.status-sending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-sent {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+}

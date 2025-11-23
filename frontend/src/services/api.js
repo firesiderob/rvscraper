@@ -1,0 +1,56 @@
+// frontend/src/services/api.js
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Auth
+export const login = (email, password) => api.post('/auth/login', { email, password });
+export const register = (email, password, name) => api.post('/auth/register', { email, password, name });
+export const getCurrentUser = () => api.get('/auth/me');
+
+// Leads
+export const getLeads = (params) => api.get('/leads', { params });
+export const getLead = (id) => api.get(`/leads/${id}`);
+export const createLead = (data) => api.post('/leads', data);
+export const updateLead = (id, data) => api.patch(`/leads/${id}`, data);
+export const deleteLead = (id) => api.delete(`/leads/${id}`);
+export const toggleDNC = (id) => api.patch(`/leads/${id}/toggle-dnc`);
+export const getLeadStats = () => api.get('/leads/stats/summary');
+
+// Scrapers
+export const scrapeUHaul = (state, limit) => api.post(`/scraper/uhaul/${state}`, { limit });
+export const scrapeRVTech = (state, city, limit) => api.post(`/scraper/rvtech/${state}`, { city, limit });
+export const scrapeAllUHaul = (limit) => api.post('/scraper/uhaul/all', { limit });
+export const scrapeAllRVTech = (limit) => api.post('/scraper/rvtech/all', { limit });
+export const searchAgent = (query, limit) => api.post('/scraper/search', { query, limit });
+
+// RV Owner Scrapers
+export const scrapeRVTrader = (state, city, rvType, limit) => api.post('/scraper/rvowners/rvtrader', { state, city, rvType, limit });
+export const scrapeCraigslist = (city, state, limit) => api.post('/scraper/rvowners/craigslist', { city, state, limit });
+export const searchDataAxle = (state, city, zipCode, limit) => api.post('/scraper/rvowners/dataaxle', { state, city, zipCode, limit });
+export const getDataAxleAccount = () => api.get('/scraper/dataaxle/account');
+
+// Campaigns
+export const getCampaigns = () => api.get('/campaigns');
+export const getCampaign = (id) => api.get(`/campaigns/${id}`);
+export const createCampaign = (data) => api.post('/campaigns', data);
+export const sendCampaign = (id) => api.post(`/campaigns/${id}/send`);
+export const deleteCampaign = (id) => api.delete(`/campaigns/${id}`);
+
+export default api;
