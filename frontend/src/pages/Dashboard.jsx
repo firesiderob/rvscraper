@@ -10,7 +10,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({ state: '', type: '', status: '', search: '' });
     const [scraping, setScraping] = useState(false);
-    const [activeTab, setActiveTab] = useState('leads'); // 'leads', 'search', or 'rvowners'
+    const [activeTab, setActiveTab] = useState('home'); // 'home', 'leads', 'search', or 'rvowners'
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLeads, setSelectedLeads] = useState(new Set());
     const [expandedGroups, setExpandedGroups] = useState(new Set());
@@ -371,6 +371,12 @@ export default function Dashboard() {
                 <h1>🔥 Fireside Lead Gen</h1>
                 <div className="header-actions">
                     <button
+                        className={`tab-btn ${activeTab === 'home' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('home')}
+                    >
+                        Home
+                    </button>
+                    <button
                         className={`tab-btn ${activeTab === 'leads' ? 'active' : ''}`}
                         onClick={() => setActiveTab('leads')}
                     >
@@ -420,7 +426,32 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {activeTab === 'search' ? (
+            {activeTab === 'home' ? (
+                <div className="home-container">
+                    <div className="home-header">
+                        <h2>Start Here</h2>
+                        <p>Select a method to find new leads</p>
+                    </div>
+                    <div className="home-grid">
+                        <div className="home-card">
+                            <div className="home-card-icon">🤖</div>
+                            <h3>Search Agents</h3>
+                            <p>Find RV repair shops, mobile techs, and dealerships using Google Maps.</p>
+                            <button onClick={() => setActiveTab('search')} className="home-card-btn">
+                                Go to Search Agents →
+                            </button>
+                        </div>
+                        <div className="home-card">
+                            <div className="home-card-icon">🚐</div>
+                            <h3>RV Owners</h3>
+                            <p>Find private RV sellers from Craigslist, RVTrader, and Data Axle.</p>
+                            <button onClick={() => setActiveTab('rvowners')} className="home-card-btn">
+                                Go to RV Owners →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : activeTab === 'search' ? (
                 <div className="search-agent-container">
                     <div className="search-card">
                         <h2>🤖 Search Agent</h2>
