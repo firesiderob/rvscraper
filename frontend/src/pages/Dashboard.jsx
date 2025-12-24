@@ -158,12 +158,15 @@ export default function Dashboard() {
     };
 
     const handleMarkGood = async (leadId) => {
+        console.log('handleMarkGood called with:', leadId);
         try {
-            await markLeadAsGood(leadId);
+            const response = await markLeadAsGood(leadId);
+            console.log('markLeadAsGood response:', response);
             fetchLeads();
             if (activeTab === 'goodleads') fetchGoodLeads();
         } catch (error) {
-            alert('Error marking lead');
+            console.error('Error marking lead:', error);
+            alert('Error marking lead: ' + (error.response?.data?.error || error.message));
         }
     };
 
