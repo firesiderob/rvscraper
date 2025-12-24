@@ -15,6 +15,7 @@ const app = express();
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
+    'https://rvscraper.vercel.app',
     'https://rvscraper-git-main-fireside-robs-projects.vercel.app',
     /\.vercel\.app$/  // Allow all Vercel preview deployments
 ];

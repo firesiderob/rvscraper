@@ -7,8 +7,8 @@
 (function() {
   'use strict';
 
-  // Configuration
-  const API_ENDPOINT = window.FIRESIDE_API || 'http://localhost:5001/api/visitors';
+  // Configuration - Use ngrok URL for production
+  const API_ENDPOINT = window.FIRESIDE_API || 'https://unsuperseded-melani-nondemonstrably.ngrok-free.dev/api/visitors';
   const COOKIE_NAME = 'fireside_vid';
   const COOKIE_DAYS = 365;
 
