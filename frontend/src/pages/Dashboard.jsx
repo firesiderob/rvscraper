@@ -199,11 +199,12 @@ export default function Dashboard() {
     };
 
     const getPixelCode = () => {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const apiUrl = 'https://unsuperseded-melani-nondemonstrably.ngrok-free.dev';
+        const scriptUrl = 'https://rvscraper.vercel.app';
         return `<script>
-  window.FIRESIDE_API = '${apiUrl.replace('/api', '')}/api/visitors';
+  window.FIRESIDE_API = '${apiUrl}/api/visitors';
 </script>
-<script src="${apiUrl.replace('/api', '')}/tracking.js"></script>`;
+<script src="${scriptUrl}/tracking.js"></script>`;
     };
 
     const handleDeleteClick = (id) => {
