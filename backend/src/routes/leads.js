@@ -36,6 +36,18 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+// Get all good leads (must be before /:id route)
+router.get('/good', auth, async (req, res) => {
+    try {
+        const leads = await Lead.find({ isGoodLead: true })
+            .sort({ markedGoodAt: -1 });
+
+        res.json({ leads, count: leads.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get single lead
 router.get('/:id', auth, async (req, res) => {
     try {
@@ -183,18 +195,6 @@ router.patch('/:id/mark-good', auth, async (req, res) => {
         await lead.save();
 
         res.json(lead);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get all good leads
-router.get('/good', auth, async (req, res) => {
-    try {
-        const leads = await Lead.find({ isGoodLead: true })
-            .sort({ markedGoodAt: -1 });
-
-        res.json({ leads, count: leads.length });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
