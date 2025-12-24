@@ -2,7 +2,7 @@
 const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 const Lead = require('../models/Lead');
-const { extractContactInfo } = require('../services/contactExtractor');
+const { extractContactInfo } = require('../services/aiContactExtractor');
 
 const US_STATES = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',

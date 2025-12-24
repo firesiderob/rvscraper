@@ -1,6 +1,7 @@
 // backend/src/server.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 
@@ -47,12 +48,16 @@ app.use(express.urlencoded({ extended: true }));
 // Connect to database
 connectDB();
 
+// Serve static files (for tracking pixel)
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/leads', require('./routes/leads'));
 app.use('/api/campaigns', require('./routes/campaigns'));
 app.use('/api/scraper', require('./routes/scraper'));
 app.use('/api/unsubscribe', require('./routes/unsubscribe'));
+app.use('/api/visitors', require('./routes/visitors'));
 
 // Health check
 app.get('/api/health', (req, res) => {

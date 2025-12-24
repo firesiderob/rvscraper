@@ -33,6 +33,7 @@ export const updateLead = (id, data) => api.patch(`/leads/${id}`, data);
 export const deleteLead = (id) => api.delete(`/leads/${id}`);
 export const toggleDNC = (id) => api.patch(`/leads/${id}/toggle-dnc`);
 export const getLeadStats = () => api.get('/leads/stats/summary');
+export const getRvtiTechs = (params) => api.get('/leads/rvti-techs', { params });
 
 // Scrapers
 export const scrapeUHaul = (state, limit) => api.post(`/scraper/uhaul/${state}`, { limit });
@@ -53,5 +54,20 @@ export const getCampaign = (id) => api.get(`/campaigns/${id}`);
 export const createCampaign = (data) => api.post('/campaigns', data);
 export const sendCampaign = (id) => api.post(`/campaigns/${id}/send`);
 export const deleteCampaign = (id) => api.delete(`/campaigns/${id}`);
+
+// Visitors (Tracking)
+export const getVisitors = (params) => api.get('/visitors', { params });
+export const getVisitorStats = () => api.get('/visitors/stats');
+export const exportVisitorsFacebook = (onlyNew) => api.get('/visitors/export/facebook', { params: { onlyNew }, responseType: 'blob' });
+export const deleteVisitor = (id) => api.delete(`/visitors/${id}`);
+
+// Lead Enrichment
+export const enrichLead = (id) => api.post(`/leads/${id}/enrich`);
+export const enrichLeadsBulk = (ids) => api.post('/leads/enrich-bulk', { ids });
+
+// Good Leads Export
+export const exportGoodLeads = () => api.get('/leads/export/facebook', { responseType: 'blob' });
+export const markLeadAsGood = (id) => api.patch(`/leads/${id}/mark-good`);
+export const getGoodLeads = () => api.get('/leads/good');
 
 export default api;

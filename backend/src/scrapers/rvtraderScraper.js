@@ -148,7 +148,7 @@ async function scrapeRVTrader(state, city = '', rvType = '', limit = 50) {
         console.log(`Found ${listings.length} RVTrader listings`);
 
         // Import contact extractor and validators
-        const { extractContactInfo } = require('../services/contactExtractor');
+        const { extractContactInfo } = require('../services/aiContactExtractor');
         const { validatePhone, validateEmail, validateName } = require('../utils/validators');
 
         // Save leads after extracting contact info from listing pages

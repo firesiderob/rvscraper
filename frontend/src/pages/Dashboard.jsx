@@ -1,6 +1,6 @@
 // frontend/src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
-import { getLeads, deleteLead, getLeadStats, scrapeUHaul, scrapeRVTech, searchAgent, scrapeRVTrader, scrapeCraigslist, searchDataAxle } from '../services/api';
+import { getLeads, deleteLead, getLeadStats, scrapeUHaul, scrapeRVTech, searchAgent, scrapeRVTrader, scrapeCraigslist, searchDataAxle, getRvtiTechs, getVisitors, getVisitorStats, exportVisitorsFacebook, enrichLead, enrichLeadsBulk, markLeadAsGood, exportGoodLeads, getGoodLeads } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Dashboard.css';
 
@@ -10,7 +10,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({ state: '', type: '', status: '', search: '' });
     const [scraping, setScraping] = useState(false);
-    const [activeTab, setActiveTab] = useState('home'); // 'home', 'leads', 'search', or 'rvowners'
+    const [activeTab, setActiveTab] = useState('home'); // 'home', 'leads', 'search', 'rvowners', 'rvtechs', 'visitors', 'goodleads'
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedLeads, setSelectedLeads] = useState(new Set());
     const [expandedGroups, setExpandedGroups] = useState(new Set());
@@ -19,12 +19,27 @@ export default function Dashboard() {
     const [ghlUrl, setGhlUrl] = useState('');
     const [maxResults, setMaxResults] = useState(50); // Default to 50
 
+    // Visitor tracking state
+    const [visitors, setVisitors] = useState([]);
+    const [visitorStats, setVisitorStats] = useState(null);
+    const [visitorLoading, setVisitorLoading] = useState(false);
+
+    // Good leads state
+    const [goodLeads, setGoodLeads] = useState([]);
+    const [enriching, setEnriching] = useState(new Set());
+
     // RV Owner search state
     const [rvSource, setRvSource] = useState('rvtrader'); // 'rvtrader', 'craigslist', or 'dataaxle'
     const [rvZip, setRvZip] = useState(''); // For Data Axle ZIP targeting
     const [rvState, setRvState] = useState('');
     const [rvCity, setRvCity] = useState('');
     const [rvType, setRvType] = useState('');
+
+    // RVTI Techs state
+    const [rvtiTechs, setRvtiTechs] = useState([]);
+    const [rvtiFranchises, setRvtiFranchises] = useState([]);
+    const [rvtiFilters, setRvtiFilters] = useState({ franchise: '', state: '', search: '' });
+    const [rvtiLoading, setRvtiLoading] = useState(false);
 
     useEffect(() => {
         fetchLeads();
@@ -52,6 +67,142 @@ export default function Dashboard() {
         } catch (error) {
             console.error('Error fetching stats:', error);
         }
+    };
+
+    const fetchRvtiTechs = async () => {
+        setRvtiLoading(true);
+        try {
+            const response = await getRvtiTechs(rvtiFilters);
+            setRvtiTechs(response.data.techs || []);
+            setRvtiFranchises(response.data.franchises || []);
+        } catch (error) {
+            console.error('Error fetching RVTI techs:', error);
+        } finally {
+            setRvtiLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'rvtechs') {
+            fetchRvtiTechs();
+        }
+        if (activeTab === 'visitors') {
+            fetchVisitors();
+            fetchVisitorStats();
+        }
+        if (activeTab === 'goodleads') {
+            fetchGoodLeads();
+        }
+    }, [activeTab, rvtiFilters]);
+
+    const fetchVisitors = async () => {
+        setVisitorLoading(true);
+        try {
+            const response = await getVisitors({ limit: 100 });
+            setVisitors(response.data.visitors || []);
+        } catch (error) {
+            console.error('Error fetching visitors:', error);
+        } finally {
+            setVisitorLoading(false);
+        }
+    };
+
+    const fetchVisitorStats = async () => {
+        try {
+            const response = await getVisitorStats();
+            setVisitorStats(response.data);
+        } catch (error) {
+            console.error('Error fetching visitor stats:', error);
+        }
+    };
+
+    const fetchGoodLeads = async () => {
+        try {
+            const response = await getGoodLeads();
+            setGoodLeads(response.data.leads || []);
+        } catch (error) {
+            console.error('Error fetching good leads:', error);
+        }
+    };
+
+    const handleEnrichLead = async (leadId) => {
+        setEnriching(prev => new Set([...prev, leadId]));
+        try {
+            const response = await enrichLead(leadId);
+            fetchLeads();
+            const summary = response.data?.summary;
+            if (summary?.message) {
+                alert(summary.message);
+            } else {
+                alert('Lead enriched successfully!');
+            }
+        } catch (error) {
+            alert('Error enriching lead: ' + (error.response?.data?.error || error.message));
+        } finally {
+            setEnriching(prev => {
+                const next = new Set(prev);
+                next.delete(leadId);
+                return next;
+            });
+        }
+    };
+
+    const handleEnrichSelected = async () => {
+        if (selectedLeads.size === 0) return;
+        try {
+            await enrichLeadsBulk(Array.from(selectedLeads));
+            alert(`Enriching ${selectedLeads.size} leads in background. Check back in a few minutes.`);
+        } catch (error) {
+            alert('Error starting bulk enrichment');
+        }
+    };
+
+    const handleMarkGood = async (leadId) => {
+        try {
+            await markLeadAsGood(leadId);
+            fetchLeads();
+            if (activeTab === 'goodleads') fetchGoodLeads();
+        } catch (error) {
+            alert('Error marking lead');
+        }
+    };
+
+    const handleExportGoodLeads = async () => {
+        try {
+            const response = await exportGoodLeads();
+            const blob = new Blob([response.data], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'good_leads_facebook.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            alert('Error exporting leads');
+        }
+    };
+
+    const handleExportVisitorsFacebook = async () => {
+        try {
+            const response = await exportVisitorsFacebook(false);
+            const blob = new Blob([response.data], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'visitors_facebook.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            alert('Error exporting visitors');
+        }
+    };
+
+    const getPixelCode = () => {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        return `<script>
+  window.FIRESIDE_API = '${apiUrl.replace('/api', '')}/api/visitors';
+</script>
+<script src="${apiUrl.replace('/api', '')}/tracking.js"></script>`;
     };
 
     const handleDeleteClick = (id) => {
@@ -394,6 +545,24 @@ export default function Dashboard() {
                     >
                         RV Owners
                     </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'rvtechs' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('rvtechs')}
+                    >
+                        RV Techs
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'visitors' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('visitors')}
+                    >
+                        Visitors
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'goodleads' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('goodleads')}
+                    >
+                        Good Leads
+                    </button>
                     <button onClick={logout} className="logout-btn">Logout</button>
                 </div>
             </header>
@@ -449,6 +618,14 @@ export default function Dashboard() {
                                 Go to RV Owners →
                             </button>
                         </div>
+                        <div className="home-card" onClick={() => setActiveTab('rvtechs')}>
+                            <div className="home-card-icon">🔧</div>
+                            <h3>RV Techs</h3>
+                            <p>Find RVTI certified technicians near Fireside franchise locations.</p>
+                            <button className="home-card-btn">
+                                Go to RV Techs →
+                            </button>
+                        </div>
                     </div>
                 </div>
             ) : activeTab === 'search' ? (
@@ -500,6 +677,269 @@ export default function Dashboard() {
                             </ul>
                         </div>
                     </div>
+                </div>
+            ) : activeTab === 'rvtechs' ? (
+                <div className="rvtechs-container">
+                    <div className="rvtechs-header">
+                        <h2>🔧 RVTI Certified Technicians</h2>
+                        <p>Recommend these certified RV technicians to renters near Fireside locations</p>
+                    </div>
+
+                    <div className="rvtechs-filters">
+                        <input
+                            type="text"
+                            placeholder="Search by name, city..."
+                            value={rvtiFilters.search}
+                            onChange={(e) => setRvtiFilters({ ...rvtiFilters, search: e.target.value })}
+                            className="search-input"
+                        />
+                        <select
+                            value={rvtiFilters.franchise}
+                            onChange={(e) => setRvtiFilters({ ...rvtiFilters, franchise: e.target.value })}
+                            className="filter-select"
+                        >
+                            <option value="">All Franchises</option>
+                            {rvtiFranchises.map(f => (
+                                <option key={f} value={f}>{f}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={rvtiFilters.state}
+                            onChange={(e) => setRvtiFilters({ ...rvtiFilters, state: e.target.value })}
+                            className="filter-select"
+                        >
+                            <option value="">All States</option>
+                            <option value="TX">Texas</option>
+                            <option value="FL">Florida</option>
+                            <option value="CA">California</option>
+                            <option value="AZ">Arizona</option>
+                            <option value="CO">Colorado</option>
+                            <option value="TN">Tennessee</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="SC">South Carolina</option>
+                            <option value="GA">Georgia</option>
+                            <option value="AL">Alabama</option>
+                            <option value="MI">Michigan</option>
+                            <option value="PA">Pennsylvania</option>
+                            <option value="OH">Ohio</option>
+                            <option value="VA">Virginia</option>
+                            <option value="WI">Wisconsin</option>
+                        </select>
+                        <span className="result-count">{rvtiTechs.length} techs found</span>
+                    </div>
+
+                    {rvtiLoading ? (
+                        <div className="loading">Loading technicians...</div>
+                    ) : rvtiTechs.length === 0 ? (
+                        <div className="no-leads">No certified technicians found. Try adjusting filters.</div>
+                    ) : (
+                        <div className="rvtechs-table-container">
+                            <table className="leads-table rvtechs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Business Name</th>
+                                        <th>Location</th>
+                                        <th>Phone</th>
+                                        <th>Website</th>
+                                        <th>Nearest Franchise</th>
+                                        <th>Distance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rvtiTechs.map((tech) => (
+                                        <tr key={tech._id}>
+                                            <td className="tech-name">
+                                                <strong>{tech.businessName}</strong>
+                                                <div className="tech-badge">RVTI Certified</div>
+                                            </td>
+                                            <td>
+                                                <div>{tech.address}</div>
+                                                <div className="tech-location">{tech.city}, {tech.state} {tech.zip}</div>
+                                            </td>
+                                            <td>
+                                                {tech.phone ? (
+                                                    <a href={`tel:${tech.phone}`} className="phone-link">{tech.phone}</a>
+                                                ) : '-'}
+                                            </td>
+                                            <td>
+                                                {tech.website ? (
+                                                    <a href={tech.website} target="_blank" rel="noopener noreferrer" className="website-link">
+                                                        Visit Site →
+                                                    </a>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="franchise-cell">
+                                                {tech.rvtiData?.nearestFranchise || '-'}
+                                            </td>
+                                            <td className="distance-cell">
+                                                {tech.rvtiData?.distanceToFranchise ? (
+                                                    <span className={`distance-badge ${tech.rvtiData.distanceToFranchise <= 25 ? 'close' : tech.rvtiData.distanceToFranchise <= 50 ? 'medium' : 'far'}`}>
+                                                        {tech.rvtiData.distanceToFranchise} mi
+                                                    </span>
+                                                ) : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            ) : activeTab === 'visitors' ? (
+                <div className="visitors-container">
+                    <div className="visitors-header">
+                        <h2>📊 Website Visitor Tracking</h2>
+                        <p>Track anonymous visitors and export for Facebook Lookalike Audiences</p>
+                    </div>
+
+                    {visitorStats && (
+                        <div className="visitor-stats-grid">
+                            <div className="stat-card">
+                                <h3>Total Visitors</h3>
+                                <p className="stat-number">{visitorStats.totalVisitors || 0}</p>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Today</h3>
+                                <p className="stat-number">{visitorStats.todayVisitors || 0}</p>
+                            </div>
+                            <div className="stat-card">
+                                <h3>This Week</h3>
+                                <p className="stat-number">{visitorStats.weekVisitors || 0}</p>
+                            </div>
+                            <div className="stat-card">
+                                <h3>Business IPs</h3>
+                                <p className="stat-number">{visitorStats.businessVisitors || 0}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pixel-setup-card">
+                        <h3>🔌 Install Tracking Pixel</h3>
+                        <p>Add this code to your website before the closing <code>&lt;/body&gt;</code> tag:</p>
+                        <div className="code-block">
+                            <pre>{getPixelCode()}</pre>
+                            <button
+                                className="copy-btn"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(getPixelCode());
+                                    alert('Copied to clipboard!');
+                                }}
+                            >
+                                📋 Copy Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="visitors-actions">
+                        <button onClick={handleExportVisitorsFacebook} className="export-btn">
+                            📥 Export for Facebook
+                        </button>
+                        <button onClick={() => { fetchVisitors(); fetchVisitorStats(); }} className="refresh-btn">
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    {visitorLoading ? (
+                        <div className="loading">Loading visitors...</div>
+                    ) : visitors.length === 0 ? (
+                        <div className="no-leads">No visitors tracked yet. Install the pixel to start tracking!</div>
+                    ) : (
+                        <div className="visitors-table-container">
+                            <table className="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Company</th>
+                                        <th>Device</th>
+                                        <th>Pages</th>
+                                        <th>First Visit</th>
+                                        <th>Last Visit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {visitors.map((v) => (
+                                        <tr key={v._id}>
+                                            <td>{v.city}, {v.state} {v.zip}</td>
+                                            <td>{v.company || '-'}</td>
+                                            <td>{v.device} / {v.browser}</td>
+                                            <td>{v.totalPageViews}</td>
+                                            <td>{new Date(v.firstVisit).toLocaleDateString()}</td>
+                                            <td>{new Date(v.lastVisit).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            ) : activeTab === 'goodleads' ? (
+                <div className="goodleads-container">
+                    <div className="goodleads-header">
+                        <h2>⭐ Good Leads for Facebook</h2>
+                        <p>Curated leads ready for Lookalike Audience export</p>
+                    </div>
+
+                    <div className="goodleads-actions">
+                        <button onClick={handleExportGoodLeads} className="export-btn" disabled={goodLeads.length === 0}>
+                            📥 Export Facebook CSV ({goodLeads.length} leads)
+                        </button>
+                        <button onClick={fetchGoodLeads} className="refresh-btn">
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    {goodLeads.length === 0 ? (
+                        <div className="no-leads">
+                            <p>No good leads marked yet.</p>
+                            <p>Go to the <strong>Leads</strong> tab and click the ⭐ button to mark leads as good for Facebook export.</p>
+                        </div>
+                    ) : (
+                        <div className="goodleads-table-container">
+                            <table className="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Business Name</th>
+                                        <th>Owner</th>
+                                        <th>Location</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Enriched</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {goodLeads.map((lead) => (
+                                        <tr key={lead._id}>
+                                            <td>{lead.businessName}</td>
+                                            <td>
+                                                {lead.enrichedData?.ownerFirstName || lead.ownerName || '-'}
+                                                {lead.enrichedData?.ownerLastName && ` ${lead.enrichedData.ownerLastName}`}
+                                            </td>
+                                            <td>{lead.city}, {lead.state}</td>
+                                            <td>{lead.phone || '-'}</td>
+                                            <td>{lead.enrichedData?.personalEmail || lead.email || '-'}</td>
+                                            <td>
+                                                {lead.enrichedData?.enrichedAt ? (
+                                                    <span className="badge badge-success">Yes</span>
+                                                ) : (
+                                                    <span className="badge badge-pending">No</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    onClick={() => handleMarkGood(lead._id)}
+                                                    className="icon-btn"
+                                                    title="Remove from Good Leads"
+                                                >
+                                                    ❌
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             ) : activeTab === 'rvowners' ? (
                 <div className="search-agent-container">
@@ -761,6 +1201,9 @@ export default function Dashboard() {
                     <div className="actions">
                         {selectedLeads.size > 0 && (
                             <>
+                                <button onClick={handleEnrichSelected} className="enrich-btn">
+                                    🔍 Enrich ({selectedLeads.size})
+                                </button>
                                 <button onClick={handleBulkDeleteClick} className="delete-btn">
                                     Delete ({selectedLeads.size})
                                 </button>
@@ -769,7 +1212,6 @@ export default function Dashboard() {
                                 </button>
                             </>
                         )}
-                        {/* Removed Scrape U-Haul and Scrape RV Techs buttons as requested */}
                     </div>
                 </div>
             )}
@@ -849,6 +1291,23 @@ export default function Dashboard() {
                                                         <td>{lead.email || '-'}</td>
                                                         <td><span className={`status status-${lead.status.toLowerCase()}`}>{lead.status}</span></td>
                                                         <td className="row-actions">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleMarkGood(lead._id); }}
+                                                                className={`icon-btn ${lead.isGoodLead ? 'active' : ''}`}
+                                                                title={lead.isGoodLead ? 'Remove from Good Leads' : 'Mark as Good Lead'}
+                                                            >
+                                                                {lead.isGoodLead ? '⭐' : '☆'}
+                                                            </button>
+                                                            {lead.website && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleEnrichLead(lead._id); }}
+                                                                    className="icon-btn"
+                                                                    title={lead.enrichedData?.enrichedAt ? 'Already Enriched' : 'Enrich with AI'}
+                                                                    disabled={enriching.has(lead._id) || lead.enrichedData?.enrichedAt}
+                                                                >
+                                                                    {enriching.has(lead._id) ? '⏳' : lead.enrichedData?.enrichedAt ? '✅' : '🔍'}
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleExportClick(lead); }}
                                                                 className="icon-btn ghl-icon-btn"

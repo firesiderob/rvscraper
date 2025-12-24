@@ -1,7 +1,7 @@
 // backend/src/scrapers/googleMapsScraper.js
 const puppeteer = require('puppeteer');
 const Lead = require('../models/Lead');
-const { extractContactInfo } = require('../services/contactExtractor');
+const { extractContactInfo } = require('../services/aiContactExtractor');
 
 async function searchGoogleMaps(query, limit = 20) {
     console.log(`Searching Google Maps for: ${query}...`);

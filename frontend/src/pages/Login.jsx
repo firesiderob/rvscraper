@@ -31,7 +31,10 @@ export default function Login() {
         <div className="login-container">
             <div className="login-card">
                 <div className="login-header">
-                    <h1>🔥 Fireside</h1>
+                    <div className="login-logo">
+                        <span className="login-logo-icon">🔥</span>
+                    </div>
+                    <h1>Fireside</h1>
                     <p>Lead Generation Platform</p>
                 </div>
 
@@ -39,14 +42,14 @@ export default function Login() {
                     {error && <div className="error-message">{error}</div>}
 
                     <div className="form-group">
-                        <label htmlFor="email">Email</label>
+                        <label htmlFor="email">Email Address</label>
                         <input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            placeholder="admin@fireside.com"
+                            placeholder="you@company.com"
                         />
                     </div>
 
@@ -58,14 +61,18 @@ export default function Login() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
                         />
                     </div>
 
-                    <button type="submit" disabled={loading} className="login-button">
-                        {loading ? 'Logging in...' : 'Login'}
+                    <button type="submit" disabled={loading} className={`login-button ${loading ? 'loading' : ''}`}>
+                        {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
+
+                <div className="login-footer">
+                    <p>Fireside RV Rental Franchise</p>
+                </div>
             </div>
         </div>
     );

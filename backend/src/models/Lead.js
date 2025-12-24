@@ -42,7 +42,7 @@ const leadSchema = new mongoose.Schema({
     source: String, // Which scraper found this lead
     leadSource: {
         type: String,
-        enum: ['Google Maps', 'Google Places API', 'RVillage', 'iRV2', 'RVTrader', 'Craigslist', 'DataAxle', 'Other']
+        enum: ['Google Maps', 'Google Places API', 'RVillage', 'iRV2', 'RVTrader', 'Craigslist', 'DataAxle', 'RVTI', 'Other']
     },
     // Data Axle specific fields
     dataAxleId: String, // Unique ID from Data Axle (for deduplication)
@@ -67,6 +67,27 @@ const leadSchema = new mongoose.Schema({
         lastActive: Date,
         username: String
     },
+    // RVTI Certified Technician data
+    rvtiData: {
+        certifiedTech: { type: Boolean, default: false },
+        nearestFranchise: String,
+        distanceToFranchise: Number, // miles
+        latitude: Number,
+        longitude: Number,
+        websiteTitle: String
+    },
+    // Enriched data (from AI research)
+    enrichedData: {
+        ownerFirstName: String,
+        ownerLastName: String,
+        personalEmail: String,
+        linkedinUrl: String,
+        enrichedAt: Date,
+        confidence: String // 'high', 'medium', 'low'
+    },
+    // Good lead flag for Facebook export
+    isGoodLead: { type: Boolean, default: false },
+    markedGoodAt: Date,
     createdAt: {
         type: Date,
         default: Date.now
